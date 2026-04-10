@@ -250,6 +250,179 @@
 
   const SHARED_CARDS = ['bandage', 'meat', 'bravery', 'nakama_power', 'will_of_d'];
 
+  const ADMIN_DB_NAME = 'CardVoyageAdmin';
+  const ADMIN_SPRITE_STORE = 'sprites';
+  let adminDB = null;
+  let playerAnimInterval = null;
+
+  function openAdminDB() {
+    if (adminDB) return Promise.resolve(adminDB);
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(ADMIN_DB_NAME, 1);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(ADMIN_SPRITE_STORE)) {
+          db.createObjectStore(ADMIN_SPRITE_STORE);
+        }
+      };
+      req.onsuccess = (e) => { adminDB = e.target.result; resolve(adminDB); };
+      req.onerror = (e) => reject(e.target.error);
+    });
+  }
+
+  function adminDBGet(key) {
+    return openAdminDB().then(db => new Promise((resolve, reject) => {
+      const tx = db.transaction(ADMIN_SPRITE_STORE, 'readonly');
+      const req = tx.objectStore(ADMIN_SPRITE_STORE).get(key);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = (e) => reject(e.target.error);
+    }));
+  }
+
+  async function adminGetSpriteUrl(key) {
+    const blob = await adminDBGet(key);
+    if (blob) {
+      return URL.createObjectURL(blob);
+    }
+    if (typeof cloudDb !== 'undefined') {
+      try {
+        const docId = 'sprites_' + key.replace(/\//g, '_');
+        const doc = await cloudDb.collection('assets').doc(docId).get();
+        if (doc.exists && doc.data().url) {
+          return doc.data().url;
+        }
+      } catch (e) {
+        console.warn('[Game] Cloud sprite lookup failed for', key, e.message);
+      }
+    }
+    return null;
+  }
+
+  async function loadCharacterAnimationFrames(character) {
+    if (!character || !character.id) return;
+    character._adminFrameCache = character._adminFrameCache || {};
+    const nodes = [];
+
+    if (character.animFlow && Array.isArray(character.animFlow.nodes)) {
+      for (const node of character.animFlow.nodes) {
+        nodes.push({ id: node.id, type: node.type, fps: node.fps || 8 });
+      }
+    }
+
+    if (character.animations) {
+      for (const [type, meta] of Object.entries(character.animations)) {
+        if (!nodes.find(n => n.id === type)) {
+          nodes.push({ id: type, type: type, fps: (meta && meta.fps) || 8 });
+        }
+      }
+    }
+
+    for (const node of nodes) {
+      if (character._adminFrameCache[node.id]) continue;
+      const frames = [];
+      for (let i = 0; i < 40; i++) {
+        const key = `${character.id}_${node.id}_${i}`;
+        const url = await adminGetSpriteUrl(key);
+        if (!url) break;
+        frames.push({ url });
+      }
+      if (frames.length > 0) {
+        character._adminFrameCache[node.id] = { frames, fps: node.fps || 8 };
+      }
+    }
+  }
+
+  function getAnimationNodeForType(character, type) {
+    if (!character) return null;
+    if (character._adminFrameCache && character._adminFrameCache[type]) {
+      return { id: type, ...character._adminFrameCache[type] };
+    }
+    if (character.animFlow && Array.isArray(character.animFlow.nodes)) {
+      let node = character.animFlow.nodes.find(n => n.type === type);
+      if (!node && type === 'skill') node = character.animFlow.nodes.find(n => n.type === 'attack') || character.animFlow.nodes.find(n => n.type === 'defense');
+      if (!node && type === 'attack') node = character.animFlow.nodes.find(n => n.type === 'attack');
+      if (!node && type === 'idle') node = character.animFlow.nodes.find(n => n.type === 'idle');
+      if (node && character._adminFrameCache && character._adminFrameCache[node.id]) {
+        return { id: node.id, ...character._adminFrameCache[node.id] };
+      }
+    }
+    return null;
+  }
+
+  function clearPlayerAnimation() {
+    if (playerAnimInterval) {
+      clearInterval(playerAnimInterval);
+      playerAnimInterval = null;
+    }
+  }
+
+  function ensurePlayerSpriteContainer() {
+    const playerSprite = document.getElementById('ba-player-sprite');
+    playerSprite.innerHTML = '';
+    playerSprite.style.cssText = 'width:220px;height:220px;display:block;position:relative;overflow:hidden;flex-shrink:0;';
+    const img = document.createElement('img');
+    img.id = 'player-anim';
+    img.style.cssText = 'width:220px;height:220px;object-fit:contain;display:block;filter:drop-shadow(0 8px 20px rgba(0,0,0,0.5));';
+    playerSprite.appendChild(img);
+    return img;
+  }
+
+  function playCharacterAnim(type) {
+    const character = state.character;
+    if (!character) return;
+    clearPlayerAnimation();
+    const anim = getAnimationNodeForType(character, type);
+    if (anim && anim.frames && anim.frames.length > 0) {
+      const img = ensurePlayerSpriteContainer();
+      let index = 0;
+      img.src = anim.frames[0].url;
+      const isIdle = type === 'idle';
+      playerAnimInterval = setInterval(() => {
+        index += 1;
+        if (index >= anim.frames.length) {
+          if (isIdle) {
+            index = 0;
+          } else {
+            clearPlayerAnimation();
+            playCharacterAnim('idle');
+            return;
+          }
+        }
+        img.src = anim.frames[index].url;
+      }, 1000 / (anim.fps || 8));
+      return;
+    }
+
+    if (character.id === 'luffy') {
+      playAnim(type);
+      return;
+    }
+
+    const playerSprite = document.getElementById('ba-player-sprite');
+    playerSprite.innerHTML = '';
+    playerSprite.removeAttribute('style');
+    playerSprite.textContent = character.battleEmoji || character.emoji || '👊';
+    playerSprite.style.width = '200px';
+    playerSprite.style.height = '200px';
+    playerSprite.style.fontSize = '150px';
+    playerSprite.style.lineHeight = '200px';
+    playerSprite.style.textAlign = 'center';
+    playerSprite.style.display = 'block';
+    playerSprite.style.animation = 'idle-float 2.5s ease-in-out infinite';
+  }
+
+  async function prefetchCustomCharacterAnimations() {
+    try {
+      for (const char of Object.values(CHARACTERS)) {
+        if (char.animFlow || (char.animations && Object.keys(char.animations).length > 0)) {
+          await loadCharacterAnimationFrames(char);
+        }
+      }
+    } catch (e) {
+      console.warn('[Game] Failed to prefetch custom animations:', e.message);
+    }
+  }
+
   // ---- Enemy Definitions ----
   const ENEMIES = {
     // Floor 1 enemies
@@ -439,6 +612,7 @@
 
   // ---- TITLE SCREEN ----
   document.getElementById('btn-start').addEventListener('click', () => {
+    mergeAdminConfig();
     showScreen('select-screen');
     renderCharacterSelect();
   });
@@ -512,7 +686,7 @@
   });
 
   // ---- GAME INITIALIZATION ----
-  function startGame(charId) {
+  async function startGame(charId) {
     const char = CHARACTERS[charId];
     state.character = char;
     state.maxHp = char.hp;
@@ -526,6 +700,11 @@
     state.cardsPlayed = 0;
     state.visitedNodes = new Set();
     uidCounter = state.deck.length + 1;
+
+    // Pre-load custom animations before entering the map
+    if (char.animFlow || (char.animations && Object.keys(char.animations).length > 0)) {
+      await loadCharacterAnimationFrames(char);
+    }
 
     generateMap();
     showScreen('map-screen');
@@ -877,7 +1056,7 @@
     drawCards(5);
     renderCombat();
 
-    if (state.character.id === 'luffy') playAnim('idle', true);
+    playCharacterAnim('idle');
   }
 
   function drawCards(count) {
@@ -923,7 +1102,19 @@
 
     // Battlefield - Player sprite, name, HP, block
     const playerSprite = document.getElementById('ba-player-sprite');
-    if (state.character.id === 'luffy') {
+    const customIdle = getAnimationNodeForType(state.character, 'idle');
+    if (customIdle) {
+      // Only init sprite container if not already set up; skip if an animation is playing
+      if (!playerSprite.querySelector('#player-anim')) {
+        playerSprite.innerHTML = '';
+        playerSprite.style.cssText = 'width:220px;height:220px;display:block;position:relative;overflow:hidden;flex-shrink:0;';
+        const img = document.createElement('img');
+        img.id = 'player-anim';
+        img.style.cssText = 'width:220px;height:220px;object-fit:contain;display:block;filter:drop-shadow(0 8px 20px rgba(0,0,0,0.5));';
+        playerSprite.appendChild(img);
+        setTimeout(function () { playCharacterAnim('idle'); }, 50);
+      }
+    } else if (state.character.id === 'luffy') {
       if (!document.getElementById('luffy-anim')) {
         playerSprite.innerHTML = '';
         playerSprite.style.cssText = 'width:220px;height:220px;display:block;position:relative;overflow:hidden;flex-shrink:0;';
@@ -1135,8 +1326,15 @@
   function playCard(card, target) {
     if (card.cost > state.energy) return;
 
-    // Luffy spritesheet on card play
-    if (state.character.id === 'luffy') {
+    if (state.character._adminFrameCache || state.character.animFlow) {
+      if (card.type === 'attack' || card.type === 'power') {
+        playCharacterAnim('attack');
+      } else if (card.type === 'skill') {
+        playCharacterAnim('defense');
+      } else {
+        playCharacterAnim('attack');
+      }
+    } else if (state.character.id === 'luffy') {
       if (card.type === 'attack') {
         playAnim('attack');
       } else if (card.type === 'skill') {
@@ -1324,7 +1522,7 @@
           }
           state.hp -= remaining;
           if (remaining > 0) {
-            if (state.character.id === 'luffy') playAnim('hit');
+            playCharacterAnim('hit');
             showNumber(document.getElementById('player-combatant'), remaining);
             document.getElementById('combat-screen').classList.add('screen-shake');
             setTimeout(() => document.getElementById('combat-screen').classList.remove('screen-shake'), 300);
@@ -1416,7 +1614,7 @@
   });
 
   function showCardReward() {
-    const charCards = CHAR_CARDS[state.character.id];
+    const charCards = CHAR_CARDS[state.character.id] || SHARED_CARDS;
     const pool = [...charCards, ...SHARED_CARDS];
     const options = shuffle(pool).slice(0, 3);
 
@@ -1518,7 +1716,7 @@
     const container = document.getElementById('shop-items');
     container.innerHTML = '';
 
-    const charCards = CHAR_CARDS[state.character.id];
+    const charCards = CHAR_CARDS[state.character.id] || SHARED_CARDS;
     const pool = shuffle([...charCards, ...SHARED_CARDS]).slice(0, 5);
 
     for (const cardId of pool) {
@@ -1678,6 +1876,10 @@
   window._gameCharacters = CHARACTERS;
   window._gameCards = CARDS;
   window.showScreen = showScreen;
+  window._mergeAdminConfig = function () {
+    mergeAdminConfig();
+    prefetchCustomCharacterAnimations();
+  };
 
   // Merge admin config on boot
   function mergeAdminConfig() {
@@ -1698,16 +1900,25 @@
               hp: char.hp || 80,
               description: char.description || 'Custom character',
               starterDeck: char.starterDeck || ['strike','strike','strike','strike','strike','defend','defend','defend','defend'],
+              animations: char.animations || {},
+              animFlow: char.animFlow || null,
               _adminAnimations: char.animations || {},
               _adminSpriteKeys: char.spriteKeys || [],
             };
           } else {
             // Override existing character sprites/animations if set
-            if (char.animations) CHARACTERS[id]._adminAnimations = char.animations;
+            if (char.animations) {
+              CHARACTERS[id].animations = char.animations;
+              CHARACTERS[id]._adminAnimations = char.animations;
+            }
+            if (char.animFlow) CHARACTERS[id].animFlow = char.animFlow;
             if (char.spriteKeys && char.spriteKeys.length) CHARACTERS[id]._adminSpriteKeys = char.spriteKeys;
             if (char.emoji) CHARACTERS[id].emoji = char.emoji;
+            if (char.battleEmoji) CHARACTERS[id].battleEmoji = char.battleEmoji;
             if (char.hp) CHARACTERS[id].hp = char.hp;
             if (char.role) CHARACTERS[id].role = char.role;
+            if (char.description) CHARACTERS[id].description = char.description;
+            if (char.starterDeck) CHARACTERS[id].starterDeck = char.starterDeck;
           }
         }
       }
@@ -1733,7 +1944,24 @@
     }
   }
 
+  async function fetchRemoteAdminConfig() {
+    if (typeof cloudDb === 'undefined') return;
+    try {
+      const doc = await cloudDb.collection('config').doc('gameConfig').get();
+      if (doc.exists) {
+        const config = doc.data();
+        localStorage.setItem('gameConfig', JSON.stringify(config));
+        mergeAdminConfig();
+        await prefetchCustomCharacterAnimations();
+      }
+    } catch (e) {
+      console.warn('[Game] Remote admin config load failed:', e.message);
+    }
+  }
+
   mergeAdminConfig();
+  prefetchCustomCharacterAnimations();
+  fetchRemoteAdminConfig();
 
   // Admin test battle: start combat with a specific character against floor 1 enemy
   window._adminStartTestBattle = function (charId) {

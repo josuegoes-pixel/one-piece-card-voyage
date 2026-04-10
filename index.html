@@ -802,7 +802,23 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  <script src="cloud-config.js"></script>
+  <script>
+    // Firebase config (inline — no external file needed)
+    var firebaseConfig = {
+      apiKey: "AIzaSyBzM0UZwDZkowXNVgp3W8pA0as42573Sro",
+      authDomain: "one-piece-9a853.firebaseapp.com",
+      projectId: "one-piece-9a853",
+      storageBucket: "one-piece-9a853.firebasestorage.app",
+      messagingSenderId: "596491053000",
+      appId: "1:596491053000:web:36fefcdf160d17c02c02fd"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var cloudDb = firebase.firestore();
+    var CLOUDINARY = {
+      cloudName: "dcnzpsfh5",
+      uploadPreset: "one_piece_unsigned"
+    };
+  </script>
   <script src="game.js"></script>
   <script src="admin.js"></script>
   <button id="btn-open-admin-temp" onclick="showScreen('admin-screen')" style="position:fixed;bottom:20px;right:20px;z-index:999;background:rgba(200,169,110,0.2);border:1px solid #c8a96e;color:#c8a96e;font-family:Cinzel,serif;font-size:0.7rem;padding:8px 16px;border-radius:6px;cursor:pointer;letter-spacing:2px;">⚙️ ADMIN</button>

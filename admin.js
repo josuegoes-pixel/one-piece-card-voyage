@@ -252,6 +252,10 @@
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(previousScreen).classList.add('active');
     clearPreviewAnimations();
+    // Re-merge admin config into game so custom characters/animations are available
+    if (typeof window._mergeAdminConfig === 'function') {
+      window._mergeAdminConfig();
+    }
   }
 
   // ---- Tab Switching ----
