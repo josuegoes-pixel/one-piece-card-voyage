@@ -1381,6 +1381,20 @@
 
     canvas.addEventListener('mouseleave', function() {
       if (isPanning) { isPanning = false; canvas.classList.remove('panning'); }
+      if (flowWiring) {
+        flowWiring.line.remove();
+        flowWiring = null;
+      }
+    });
+
+    document.addEventListener('mouseup', function(e) {
+      if (flowWiring) {
+        var canvasEl = document.getElementById('flow-canvas');
+        if (!canvasEl.contains(e.target)) {
+          flowWiring.line.remove();
+          flowWiring = null;
+        }
+      }
     });
 
     canvas.addEventListener('wheel', function(e) {
