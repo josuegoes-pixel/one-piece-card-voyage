@@ -359,10 +359,10 @@
   function ensurePlayerSpriteContainer() {
     const playerSprite = document.getElementById('ba-player-sprite');
     playerSprite.innerHTML = '';
-    playerSprite.style.cssText = 'width:220px;height:220px;display:block;position:relative;overflow:hidden;flex-shrink:0;';
+    playerSprite.style.cssText = 'width:512px;height:512px;display:block;position:relative;overflow:hidden;flex-shrink:0;';
     const img = document.createElement('img');
     img.id = 'player-anim';
-    img.style.cssText = 'width:220px;height:220px;object-fit:contain;display:block;filter:drop-shadow(0 8px 20px rgba(0,0,0,0.5));';
+    img.style.cssText = 'width:512px;height:512px;object-fit:contain;object-position:bottom center;display:block;filter:drop-shadow(0 8px 20px rgba(0,0,0,0.5));';
     playerSprite.appendChild(img);
     return img;
   }
@@ -402,13 +402,7 @@
     playerSprite.innerHTML = '';
     playerSprite.removeAttribute('style');
     playerSprite.textContent = character.battleEmoji || character.emoji || '👊';
-    playerSprite.style.width = '200px';
-    playerSprite.style.height = '200px';
-    playerSprite.style.fontSize = '150px';
-    playerSprite.style.lineHeight = '200px';
-    playerSprite.style.textAlign = 'center';
-    playerSprite.style.display = 'block';
-    playerSprite.style.animation = 'idle-float 2.5s ease-in-out infinite';
+    playerSprite.style.cssText = 'width:512px;height:512px;font-size:280px;line-height:512px;text-align:center;display:flex;align-items:flex-end;justify-content:center;animation:idle-float 2.5s ease-in-out infinite;flex-shrink:0;';
   }
 
   async function prefetchCustomCharacterAnimations() {
@@ -1107,22 +1101,22 @@
       // Only init sprite container if not already set up; skip if an animation is playing
       if (!playerSprite.querySelector('#player-anim')) {
         playerSprite.innerHTML = '';
-        playerSprite.style.cssText = 'width:220px;height:220px;display:block;position:relative;overflow:hidden;flex-shrink:0;';
+        playerSprite.style.cssText = 'width:512px;height:512px;display:block;position:relative;overflow:hidden;flex-shrink:0;';
         const img = document.createElement('img');
         img.id = 'player-anim';
-        img.style.cssText = 'width:220px;height:220px;object-fit:contain;display:block;filter:drop-shadow(0 8px 20px rgba(0,0,0,0.5));';
+        img.style.cssText = 'width:512px;height:512px;object-fit:contain;object-position:bottom center;display:block;filter:drop-shadow(0 8px 20px rgba(0,0,0,0.5));';
         playerSprite.appendChild(img);
         setTimeout(function () { playCharacterAnim('idle'); }, 50);
       }
     } else if (state.character.id === 'luffy') {
       if (!document.getElementById('luffy-anim')) {
         playerSprite.innerHTML = '';
-        playerSprite.style.cssText = 'width:220px;height:220px;display:block;position:relative;overflow:hidden;flex-shrink:0;';
+        playerSprite.style.cssText = 'width:512px;height:512px;display:block;position:relative;overflow:hidden;flex-shrink:0;';
 
         const img = document.createElement('img');
         img.id = 'luffy-anim';
         img.src = 'assets/characters/luffy/luffy-stand.png';
-        img.style.cssText = 'width:220px;height:220px;object-fit:contain;display:block;filter:drop-shadow(0 8px 20px rgba(0,0,0,0.5));animation:idle-float 2.5s ease-in-out infinite;';
+        img.style.cssText = 'width:512px;height:512px;object-fit:contain;object-position:bottom center;display:block;filter:drop-shadow(0 8px 20px rgba(0,0,0,0.5));animation:idle-float 2.5s ease-in-out infinite;';
         playerSprite.appendChild(img);
 
         setTimeout(function () { playAnim('idle'); }, 50);
@@ -1131,13 +1125,7 @@
       playerSprite.innerHTML = '';
       playerSprite.removeAttribute('style');
       playerSprite.textContent = state.character.battleEmoji;
-      playerSprite.style.width = '200px';
-      playerSprite.style.height = '200px';
-      playerSprite.style.fontSize = '150px';
-      playerSprite.style.lineHeight = '200px';
-      playerSprite.style.textAlign = 'center';
-      playerSprite.style.display = 'block';
-      playerSprite.style.animation = 'idle-float 2.5s ease-in-out infinite';
+      playerSprite.style.cssText = 'width:512px;height:512px;font-size:280px;line-height:512px;text-align:center;display:flex;align-items:flex-end;justify-content:center;animation:idle-float 2.5s ease-in-out infinite;flex-shrink:0;';
     }
     document.getElementById('ba-player-name').textContent = state.character.name.split(' ').pop();
     const bfHpPct = (state.hp / state.maxHp) * 100;
@@ -1257,14 +1245,7 @@
       const spr = div.querySelector('.sprite-emoji');
       if (spr) {
         spr.removeAttribute('style');
-        spr.style.width = '140px';
-        spr.style.height = '140px';
-        spr.style.fontSize = '110px';
-        spr.style.lineHeight = '140px';
-        spr.style.textAlign = 'center';
-        spr.style.display = 'block';
-        spr.style.animation = 'idle-float 2.5s ease-in-out infinite';
-        spr.style.animationDelay = '0.8s';
+        spr.style.cssText = 'width:512px;height:512px;font-size:280px;line-height:512px;text-align:center;display:flex;align-items:flex-end;justify-content:center;animation:idle-float-mirror 2.5s ease-in-out infinite;animation-delay:0.8s;transform:scaleX(-1);flex-shrink:0;';
       }
     }
   }
@@ -1455,10 +1436,10 @@
     const el = document.querySelector(`.enemy-unit[data-uid="${enemy.uid}"]`);
     if (el && damage > 0) {
       showNumber(el, damage);
-      el.querySelector('.sprite-emoji').style.transform = 'translateX(5px)';
+      el.querySelector('.sprite-emoji').style.transform = 'scaleX(-1) translateX(5px)';
       setTimeout(() => {
         const sprite = el.querySelector('.sprite-emoji');
-        if (sprite) sprite.style.transform = '';
+        if (sprite) sprite.style.transform = 'scaleX(-1)';
       }, 150);
     }
   }

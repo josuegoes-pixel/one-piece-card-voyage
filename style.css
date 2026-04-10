@@ -1122,13 +1122,12 @@ html, body {
 .battle-area {
   position: relative;
   width: 100%;
-  height: 60vh;
+  height: 70vh;
   flex-shrink: 0;
   display: flex !important;
   align-items: flex-end !important;
   justify-content: space-between;
-  padding: 0 8% 60px 10% !important;
-  height: 65vh;
+  padding: 0 4% 0 6% !important;
   overflow: hidden;
   background: transparent;
   z-index: 2;
@@ -1140,29 +1139,29 @@ html, body {
   50% { filter: drop-shadow(0 0 40px rgba(200, 169, 110, 0.6)); }
 }
 
-/* Horizon line */
+/* Ground line */
 .battle-area::before {
   content: '';
   position: absolute;
-  bottom: 80px;
-  left: 5%;
-  right: 5%;
+  bottom: 0;
+  left: 0;
+  right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(200, 169, 110, 0.12) 30%, rgba(200, 169, 110, 0.12) 70%, transparent);
+  background: linear-gradient(90deg, transparent, rgba(200, 169, 110, 0.15) 20%, rgba(200, 169, 110, 0.15) 80%, transparent);
   box-shadow: 0 0 20px 4px rgba(200, 169, 110, 0.05);
   pointer-events: none;
   z-index: 0;
 }
 
-/* Bottom darkening */
+/* Bottom darkening (ground fade) */
 .battle-area::after {
   content: '';
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 25%;
-  background: linear-gradient(0deg, #050508 0%, transparent 40%);
+  height: 15%;
+  background: linear-gradient(0deg, rgba(5,5,8,0.7) 0%, transparent 100%);
   pointer-events: none;
   z-index: 0;
 }
@@ -1209,17 +1208,23 @@ html, body {
   z-index: 2;
 }
 
-/* Sprite emoji — sized via JS with transform:scale for cross-platform emoji scaling */
+/* Sprite emoji — sized via JS, aligned by bottom (feet on ground) */
 .sprite-emoji {
   line-height: 1;
   display: block;
   filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.6));
   animation: idle-float 2.5s ease-in-out infinite;
+  transform-origin: bottom center;
 }
 
 @keyframes idle-float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-12px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes idle-float-mirror {
+  0%, 100% { transform: scaleX(-1) translateY(0px); }
+  50% { transform: scaleX(-1) translateY(-8px); }
 }
 
 #luffy-img {
@@ -1228,11 +1233,12 @@ html, body {
 
 /* Shadow oval under sprites */
 .sprite-shadow {
-  width: 80px;
-  height: 10px;
-  background: rgba(0, 0, 0, 0.4);
+  width: 120px;
+  height: 14px;
+  background: rgba(0, 0, 0, 0.35);
   border-radius: 50%;
-  margin-top: -8px;
+  margin-top: -6px;
+  flex-shrink: 0;
 }
 
 /* Name label */
@@ -1311,7 +1317,7 @@ html, body {
   opacity: 0;
 }
 
-/* ---- Player side ---- */
+/* ---- Player side (left, feet on ground) ---- */
 .player-side {
   flex-shrink: 0;
   align-items: center;
@@ -1319,17 +1325,25 @@ html, body {
   margin-bottom: 0;
 }
 
-/* ---- Enemies group ---- */
+.player-side .sprite-emoji {
+  transform-origin: bottom center;
+}
+
+/* ---- Enemies group (right, mirrored like fighting game) ---- */
 .enemies-group {
   display: flex;
-  gap: 40px;
+  gap: 30px;
   align-items: flex-end;
   z-index: 2;
 }
 
 .enemies-group .sprite-shadow {
-  width: 60px;
+  width: 100px;
   animation-delay: 0.8s;
+}
+
+.enemies-group .sprite-emoji {
+  transform-origin: bottom center;
 }
 
 /* Enemy combatant unit */
