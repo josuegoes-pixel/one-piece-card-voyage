@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>One Piece: Card Voyage</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+    <!-- Title Screen -->
+    <div id="title-screen" class="screen active">
+      <div class="title-bg-effects">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+      </div>
+      <div class="title-content">
+        <div class="title-logo">
+          <div class="title-sub">ONE PIECE</div>
+          <h1 class="title-main">CARD VOYAGE</h1>
+          <div class="title-divider"></div>
+          <p class="title-tagline">A Roguelike Deck-Building Adventure</p>
+        </div>
+        <button class="btn btn-primary btn-glow" id="btn-start">
+          <span>START VOYAGE</span>
+        </button>
+        <button class="btn btn-secondary" id="btn-how-to-play">
+          <span>How to Play</span>
+        </button>
+      </div>
+      <div class="title-footer">
+        <span class="version">v1.0</span>
+      </div>
+    </div>
+
+    <!-- Character Select Screen -->
+    <div id="select-screen" class="screen">
+      <div class="screen-header">
+        <button class="btn-back" id="btn-back-title">&larr; Back</button>
+        <h2 class="screen-title">Choose Your Pirate</h2>
+        <div></div>
+      </div>
+      <div class="character-grid" id="character-grid"></div>
+      <div class="character-detail" id="character-detail">
+        <div class="detail-placeholder">Select a character to view details</div>
+      </div>
+      <button class="btn btn-primary btn-glow btn-embark" id="btn-embark" disabled>
+        <span>SET SAIL</span>
+      </button>
+    </div>
+
+    <!-- Map Screen -->
+    <div id="map-screen" class="screen">
+      <div class="map-table">
+        <!-- Parchment map -->
+        <div class="map-parchment">
+          <div class="parchment-stain parchment-stain-tl"></div>
+          <div class="parchment-stain parchment-stain-br"></div>
+
+          <!-- Header -->
+          <div class="map-header-area">
+            <div class="map-header-info">
+              <span class="map-hud-avatar" id="map-avatar"></span>
+              <span class="map-hud-hp" id="map-hp"></span>
+              <span class="map-hud-gold" id="map-gold"></span>
+            </div>
+            <div class="map-header-title">
+              <h2 class="parchment-title">GRAND LINE</h2>
+              <div class="parchment-subtitle" id="map-floor"></div>
+            </div>
+            <div class="map-header-actions">
+              <button class="btn btn-small parchment-btn" id="btn-deck-view">Deck</button>
+            </div>
+          </div>
+
+          <div class="parchment-divider"></div>
+
+          <!-- Map content -->
+          <div class="map-scroll-area" id="map-container">
+            <svg class="map-svg-lines" id="map-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+            <div class="map-nodes-layer" id="map-nodes"></div>
+          </div>
+
+          <!-- Player marker indicator -->
+          <div class="map-player-marker" id="map-player-marker"></div>
+        </div>
+
+        <!-- Legend panel -->
+        <div class="map-legend">
+          <h3 class="legend-title">Legenda</h3>
+          <div class="legend-item"><span class="legend-icon">⚔️</span> Inimigo</div>
+          <div class="legend-item"><span class="legend-icon">💀</span> Elite</div>
+          <div class="legend-item"><span class="legend-icon">🔥</span> Descanso</div>
+          <div class="legend-item"><span class="legend-icon">💰</span> Loja</div>
+          <div class="legend-item"><span class="legend-icon">👑</span> Boss</div>
+          <div class="legend-item"><span class="legend-icon">❓</span> Evento</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Combat Screen -->
+    <div id="combat-screen" class="screen">
+      <!-- Background Video -->
+      <video id="battle-bg-video" autoplay loop muted playsinline
+        style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:0.85;">
+        <source src="assets/backgrounds/battle-bg.mp4" type="video/mp4">
+      </video>
+      <!-- Dark overlay for contrast -->
+      <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.25);z-index:1;pointer-events:none;"></div>
+      <!-- HUD SUPERIOR -->
+      <div class="combat-hud-top">
+        <div class="hud-left">
+          <div class="hud-avatar" id="combat-avatar"></div>
+          <div class="hud-hp-section">
+            <div class="hud-hp-bar">
+              <div class="hud-hp-fill" id="player-hp-bar"></div>
+              <span class="hud-hp-text" id="player-hp-text"></span>
+            </div>
+            <div class="hud-block-badge" id="player-block">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2980b9" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span id="player-block-value">0</span>
+            </div>
+          </div>
+          <div class="hud-buffs" id="hud-buffs"></div>
+          <div class="hud-divider"></div>
+          <div class="hud-relics" id="hud-relics"></div>
+        </div>
+        <div class="hud-center">
+          <div class="hud-floor-badge">
+            <span class="hud-floor-num" id="hud-floor">1</span>
+            <span class="hud-floor-label">FLOOR</span>
+          </div>
+          <div class="hud-gold-badge">
+            <span class="hud-gold-icon">&#x1FA99;</span>
+            <span id="hud-gold">0</span>
+          </div>
+        </div>
+        <div class="hud-right">
+          <button class="hud-btn" id="btn-combat-map">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/><path d="M8 2v16"/><path d="M16 6v16"/></svg>
+            <span>Map</span>
+          </button>
+          <button class="hud-btn" id="btn-combat-deck">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 8h20"/></svg>
+            <span>Deck <em id="hud-deck-count">0</em></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- BATTLEFIELD -->
+      <div class="battle-area">
+        <div class="ba-ambient ba-light-left"></div>
+        <div class="ba-ambient ba-light-right"></div>
+
+        <!-- Player combatant -->
+        <div class="combatant player-side" id="player-combatant">
+          <div class="sprite-emoji" id="ba-player-sprite"></div>
+          <div class="sprite-shadow"></div>
+          <div class="combatant-name" id="ba-player-name"></div>
+          <div class="combatant-hp-wrap">
+            <div class="combatant-hp-bar">
+              <div class="combatant-hp-fill" id="ba-player-hp"></div>
+              <span class="combatant-hp-text" id="ba-player-hp-text"></span>
+            </div>
+            <div class="combatant-block" id="ba-player-block">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2980b9" stroke-width="3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span id="ba-player-block-val">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enemies group -->
+        <div class="enemies-group" id="enemy-area"></div>
+      </div>
+
+      <!-- HUD INFERIOR -->
+      <div class="combat-hud-bottom">
+        <div class="hud-draw-pile" id="draw-pile">
+          <div class="pile-icon-stack">
+            <div class="pile-card-back"></div>
+            <div class="pile-card-back offset"></div>
+          </div>
+          <span class="pile-number" id="draw-count">0</span>
+        </div>
+
+        <div class="hud-energy-orb" id="energy-orb">
+          <span class="energy-value" id="energy-text">3</span>
+          <span class="energy-max" id="energy-max-text">/3</span>
+        </div>
+
+        <div class="hand-area" id="hand-area"></div>
+
+        <button class="btn-end-turn" id="btn-end-turn">
+          <span>END TURN</span>
+        </button>
+
+        <div class="hud-discard-pile" id="discard-pile">
+          <div class="pile-icon-stack discard">
+            <div class="pile-card-back faded"></div>
+          </div>
+          <span class="pile-number" id="discard-count">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reward Screen -->
+    <div id="reward-screen" class="screen">
+      <h2 class="screen-title reward-title">Victory!</h2>
+      <div class="reward-container" id="reward-container"></div>
+      <button class="btn btn-primary" id="btn-reward-continue">Continue</button>
+    </div>
+
+    <!-- Rest Screen -->
+    <div id="rest-screen" class="screen">
+      <h2 class="screen-title">Rest Site</h2>
+      <p class="rest-subtitle">The crew takes a break on an island...</p>
+      <div class="rest-options">
+        <button class="btn btn-rest" id="btn-rest-heal">
+          <span class="rest-icon">&#x2764;</span>
+          <span class="rest-label">Rest</span>
+          <span class="rest-desc">Heal 30% of max HP</span>
+        </button>
+        <button class="btn btn-rest" id="btn-rest-upgrade">
+          <span class="rest-icon">&#x2B06;</span>
+          <span class="rest-label">Train</span>
+          <span class="rest-desc">Upgrade a card</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Shop Screen -->
+    <div id="shop-screen" class="screen">
+      <div class="screen-header">
+        <button class="btn-back" id="btn-back-map-shop">&larr; Leave</button>
+        <h2 class="screen-title">Merchant Ship</h2>
+        <span class="stat-gold" id="shop-gold"></span>
+      </div>
+      <div class="shop-items" id="shop-items"></div>
+    </div>
+
+    <!-- Upgrade Screen -->
+    <div id="upgrade-screen" class="screen">
+      <h2 class="screen-title">Choose a Card to Upgrade</h2>
+      <div class="upgrade-cards" id="upgrade-cards"></div>
+      <button class="btn btn-secondary" id="btn-skip-upgrade">Skip</button>
+    </div>
+
+    <!-- Card Reward Screen -->
+    <div id="card-reward-screen" class="screen">
+      <h2 class="screen-title">Choose a Card</h2>
+      <div class="card-reward-options" id="card-reward-options"></div>
+      <button class="btn btn-secondary" id="btn-skip-card">Skip</button>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameover-screen" class="screen">
+      <h2 class="screen-title gameover-title">Defeated</h2>
+      <p class="gameover-subtitle" id="gameover-subtitle"></p>
+      <div class="gameover-stats" id="gameover-stats"></div>
+      <button class="btn btn-primary" id="btn-restart">Try Again</button>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victory-screen" class="screen">
+      <div class="victory-effects">
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+      </div>
+      <h2 class="screen-title victory-title">PIRATE KING!</h2>
+      <p class="victory-subtitle">You conquered the Grand Line!</p>
+      <div class="gameover-stats" id="victory-stats"></div>
+      <button class="btn btn-primary btn-glow" id="btn-new-voyage">New Voyage</button>
+    </div>
+
+    <!-- Deck View Modal -->
+    <div id="deck-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Your Deck</h3>
+          <button class="btn-close" id="btn-close-deck">&times;</button>
+        </div>
+        <div class="modal-body" id="deck-modal-cards"></div>
+      </div>
+    </div>
+
+    <!-- How to Play Modal -->
+    <div id="help-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>How to Play</h3>
+          <button class="btn-close" id="btn-close-help">&times;</button>
+        </div>
+        <div class="modal-body help-body">
+          <div class="help-section">
+            <h4>Overview</h4>
+            <p>One Piece: Card Voyage is a roguelike deck-building game. Navigate the Grand Line, battle enemies, collect cards, and become the Pirate King!</p>
+          </div>
+          <div class="help-section">
+            <h4>Combat</h4>
+            <p>Each turn you draw 5 cards and get 3 energy. Play cards by clicking them, then click an enemy to target attacks. Block reduces incoming damage. End your turn when done.</p>
+          </div>
+          <div class="help-section">
+            <h4>Map</h4>
+            <p><strong>Enemy</strong> - Fight a regular battle<br>
+            <strong>Elite</strong> - Tough fight, better rewards<br>
+            <strong>Rest</strong> - Heal or upgrade a card<br>
+            <strong>Shop</strong> - Buy cards and potions<br>
+            <strong>Boss</strong> - Defeat to advance</p>
+          </div>
+          <div class="help-section">
+            <h4>Characters</h4>
+            <p><strong>Luffy</strong> - Aggressive attacker, combo-based<br>
+            <strong>Zoro</strong> - Heavy damage, multi-hit strikes<br>
+            <strong>Nami</strong> - Control and debuffs<br>
+            <strong>Sanji</strong> - Speed and evasion</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Screen (hidden, accessed via NAKAMA code) -->
+    <div id="admin-screen" class="screen">
+      <div class="admin-container">
+        <!-- Top Bar -->
+        <div class="admin-topbar">
+          <div class="admin-topbar-left">
+            <span class="admin-logo">⚙️</span>
+            <h2 class="admin-logo-text">ADMIN</h2>
+          </div>
+          <nav class="admin-tabs">
+            <button class="admin-tab active" data-tab="characters"><span class="admin-tab-icon">🎮</span> Personagens</button>
+            <button class="admin-tab" data-tab="cards"><span class="admin-tab-icon">🎴</span> Cartas</button>
+            <button class="admin-tab" data-tab="scenarios"><span class="admin-tab-icon">🎬</span> Cenários</button>
+          </nav>
+          <span id="cloud-status">☁️ Conectando...</span>
+          <button class="admin-close" id="btn-admin-close">&times;</button>
+        </div>
+
+        <!-- ═══ Tab: Personagens ═══ -->
+        <div class="admin-tab-content active" id="tab-characters">
+          <div class="admin-3col">
+            <!-- Col 1: Sidebar -->
+            <div class="admin-sidebar">
+              <div class="admin-sidebar-head">
+                <span class="admin-sidebar-title">Personagens</span>
+                <span class="admin-sidebar-count" id="char-count">0</span>
+              </div>
+              <button class="admin-btn-add" id="btn-new-char">+ Adicionar</button>
+              <div class="admin-list" id="char-list"></div>
+            </div>
+            <!-- Col 2: Config -->
+            <div class="admin-config">
+              <div class="admin-config-scroll">
+                <div class="admin-field">
+                  <label class="admin-label">Nome <span class="admin-req">*</span></label>
+                  <input type="text" id="char-name" class="admin-input" placeholder="Ex: Monkey D. Luffy">
+                  <span class="admin-helper">Nome que aparece no jogo</span>
+                </div>
+                <div class="admin-field">
+                  <label class="admin-label">ID</label>
+                  <input type="text" id="char-id" class="admin-input" placeholder="Auto-gerado" readonly>
+                  <span class="admin-helper">Gerado automaticamente</span>
+                </div>
+                <div class="admin-field-row">
+                  <div class="admin-field">
+                    <label class="admin-label">Emoji</label>
+                    <input type="text" id="char-emoji" class="admin-input" placeholder="👑">
+                  </div>
+                  <div class="admin-field">
+                    <label class="admin-label">Classe</label>
+                    <input type="text" id="char-role" class="admin-input" placeholder="Attacker">
+                  </div>
+                  <div class="admin-field">
+                    <label class="admin-label">HP</label>
+                    <input type="number" id="char-hp" class="admin-input" value="80" min="1" max="999">
+                  </div>
+                </div>
+
+                <div class="admin-divider"></div>
+                <div class="anim-tabs">
+                  <button class="anim-tab active" id="tab-frames">Frames</button>
+                  <button class="anim-tab" id="tab-fluxo">Fluxo</button>
+                </div>
+
+                <div id="anim-panel-frames">
+                <div class="admin-anim-sections" id="char-anim-sections">
+                  <div class="anim-section" data-anim="idle">
+                    <div class="anim-section-header">
+                      <span class="anim-dot anim-dot-yellow"></span>
+                      <span class="anim-section-title">Parado</span>
+                      <span class="anim-section-count">0 frames</span>
+                      <span class="anim-section-arrow"></span>
+                    </div>
+                    <div class="anim-section-body">
+                      <div class="anim-dropzone" data-anim="idle">
+                        <p>Arraste frames PNG aqui</p>
+                        <button class="admin-btn anim-browse-btn">Selecionar</button>
+                        <input type="file" class="anim-file-input" multiple accept="image/png,image/webp" hidden>
+                      </div>
+                      <div class="anim-thumbs-grid" data-anim="idle"></div>
+                      <div class="anim-controls">
+                        <label class="anim-fps-label">FPS <input type="range" class="anim-fps" min="1" max="30" value="4"><span class="fps-val">4</span></label>
+                        <button class="admin-btn admin-btn-sm anim-preview-btn" data-anim="idle">▶</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="anim-section" data-anim="run">
+                    <div class="anim-section-header">
+                      <span class="anim-dot anim-dot-green"></span>
+                      <span class="anim-section-title">Correndo</span>
+                      <span class="anim-section-count">0 frames</span>
+                      <span class="anim-section-arrow"></span>
+                    </div>
+                    <div class="anim-section-body">
+                      <div class="anim-dropzone" data-anim="run">
+                        <p>Arraste frames PNG aqui</p>
+                        <button class="admin-btn anim-browse-btn">Selecionar</button>
+                        <input type="file" class="anim-file-input" multiple accept="image/png,image/webp" hidden>
+                      </div>
+                      <div class="anim-thumbs-grid" data-anim="run"></div>
+                      <div class="anim-controls">
+                        <label class="anim-fps-label">FPS <input type="range" class="anim-fps" min="1" max="30" value="8"><span class="fps-val">8</span></label>
+                        <button class="admin-btn admin-btn-sm anim-preview-btn" data-anim="run">▶</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="anim-section" data-anim="attack">
+                    <div class="anim-section-header">
+                      <span class="anim-dot anim-dot-red"></span>
+                      <span class="anim-section-title">Atacando</span>
+                      <span class="anim-section-count">0 frames</span>
+                      <span class="anim-section-arrow"></span>
+                    </div>
+                    <div class="anim-section-body">
+                      <div class="anim-dropzone" data-anim="attack">
+                        <p>Arraste frames PNG aqui</p>
+                        <button class="admin-btn anim-browse-btn">Selecionar</button>
+                        <input type="file" class="anim-file-input" multiple accept="image/png,image/webp" hidden>
+                      </div>
+                      <div class="anim-thumbs-grid" data-anim="attack"></div>
+                      <div class="anim-controls">
+                        <label class="anim-fps-label">FPS <input type="range" class="anim-fps" min="1" max="30" value="12"><span class="fps-val">12</span></label>
+                        <button class="admin-btn admin-btn-sm anim-preview-btn" data-anim="attack">▶</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="anim-section" data-anim="hit">
+                    <div class="anim-section-header">
+                      <span class="anim-dot anim-dot-orange"></span>
+                      <span class="anim-section-title">Levando Dano</span>
+                      <span class="anim-section-count">0 frames</span>
+                      <span class="anim-section-arrow"></span>
+                    </div>
+                    <div class="anim-section-body">
+                      <div class="anim-dropzone" data-anim="hit">
+                        <p>Arraste frames PNG aqui</p>
+                        <button class="admin-btn anim-browse-btn">Selecionar</button>
+                        <input type="file" class="anim-file-input" multiple accept="image/png,image/webp" hidden>
+                      </div>
+                      <div class="anim-thumbs-grid" data-anim="hit"></div>
+                      <div class="anim-controls">
+                        <label class="anim-fps-label">FPS <input type="range" class="anim-fps" min="1" max="30" value="8"><span class="fps-val">8</span></label>
+                        <button class="admin-btn admin-btn-sm anim-preview-btn" data-anim="hit">▶</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="anim-section" data-anim="death">
+                    <div class="anim-section-header">
+                      <span class="anim-dot anim-dot-purple"></span>
+                      <span class="anim-section-title">Morrendo</span>
+                      <span class="anim-section-count">0 frames</span>
+                      <span class="anim-section-arrow"></span>
+                    </div>
+                    <div class="anim-section-body">
+                      <div class="anim-dropzone" data-anim="death">
+                        <p>Arraste frames PNG aqui</p>
+                        <button class="admin-btn anim-browse-btn">Selecionar</button>
+                        <input type="file" class="anim-file-input" multiple accept="image/png,image/webp" hidden>
+                      </div>
+                      <div class="anim-thumbs-grid" data-anim="death"></div>
+                      <div class="anim-controls">
+                        <label class="anim-fps-label">FPS <input type="range" class="anim-fps" min="1" max="30" value="6"><span class="fps-val">6</span></label>
+                        <button class="admin-btn admin-btn-sm anim-preview-btn" data-anim="death">▶</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="anim-section" data-anim="defense">
+                    <div class="anim-section-header">
+                      <span class="anim-dot anim-dot-blue"></span>
+                      <span class="anim-section-title">Defendendo</span>
+                      <span class="anim-section-count">0 frames</span>
+                      <span class="anim-section-arrow"></span>
+                    </div>
+                    <div class="anim-section-body">
+                      <div class="anim-dropzone" data-anim="defense">
+                        <p>Arraste frames PNG aqui</p>
+                        <button class="admin-btn anim-browse-btn">Selecionar</button>
+                        <input type="file" class="anim-file-input" multiple accept="image/png,image/webp" hidden>
+                      </div>
+                      <div class="anim-thumbs-grid" data-anim="defense"></div>
+                      <div class="anim-controls">
+                        <label class="anim-fps-label">FPS <input type="range" class="anim-fps" min="1" max="30" value="6"><span class="fps-val">6</span></label>
+                        <button class="admin-btn admin-btn-sm anim-preview-btn" data-anim="defense">▶</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                </div><!-- /anim-panel-frames -->
+
+                <div id="anim-panel-fluxo" class="hidden">
+                  <div id="flow-node-panel" class="flow-node-panel">
+                    <div class="flow-node-panel-empty">
+                      <p>Selecione um nó no editor para configurar seus frames.</p>
+                    </div>
+                    <div class="flow-node-panel-content hidden">
+                      <div class="flow-node-panel-header">
+                        <span id="flow-panel-title">🎬 Nó</span>
+                        <button class="admin-btn admin-btn-sm" id="btn-flow-panel-close">&times;</button>
+                      </div>
+                      <div class="flow-node-panel-body">
+                        <div class="admin-field">
+                          <label class="admin-label">Nome do Card</label>
+                          <input type="text" id="flow-node-name" class="admin-input" placeholder="Nome...">
+                        </div>
+                        <div class="anim-dropzone" id="flow-frame-drop">
+                          <p>Arraste frames PNG aqui</p>
+                          <button class="admin-btn anim-browse-btn">Selecionar</button>
+                          <input type="file" id="flow-frame-input" class="anim-file-input" multiple accept="image/png,image/webp" hidden>
+                        </div>
+                        <div class="flow-frame-list" id="flow-frame-list"></div>
+                        <div class="anim-controls" style="margin-top:8px;">
+                          <label class="anim-fps-label">FPS <input type="range" id="flow-fps" class="anim-fps" min="1" max="30" value="8"><span class="fps-val" id="flow-fps-val">8</span></label>
+                          <button class="admin-btn admin-btn-sm" id="btn-flow-preview-node">▶</button>
+                        </div>
+                        <div class="anim-duration" id="flow-duration">⏱ <b>0</b> frames × <b>8fps</b> = <b>0.0s</b></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Sticky footer -->
+              <div class="admin-config-footer">
+                <button class="admin-btn admin-btn-cancel" id="btn-char-cancel">Cancelar</button>
+                <button class="admin-btn admin-btn-save" id="btn-char-save">Salvar</button>
+              </div>
+            </div>
+            <!-- Col 3: Preview / Flow Editor -->
+            <div class="admin-preview">
+              <!-- Normal preview (Frames mode) -->
+              <div class="admin-preview-stage" id="char-preview-stage">
+                <div class="admin-preview-label" id="char-preview-label">Nenhum personagem</div>
+                <canvas id="char-preview-canvas" width="400" height="400"></canvas>
+                <div class="admin-preview-poses">
+                  <button class="admin-btn admin-btn-sm" data-ipose="idle">Parado</button>
+                  <button class="admin-btn admin-btn-sm" data-ipose="attack">Atacando</button>
+                  <button class="admin-btn admin-btn-sm" data-ipose="hit">Dano</button>
+                  <button class="admin-btn admin-btn-sm" data-ipose="death">Morte</button>
+                  <button class="admin-btn admin-btn-sm" data-ipose="defense">Defesa</button>
+                </div>
+              </div>
+              <!-- Flow canvas (Fluxo mode) -->
+              <div id="flow-editor-col" class="flow-editor-col hidden">
+                <div class="flow-toolbar">
+                  <button class="admin-btn admin-btn-sm" id="btn-add-attack-node">⚡ + Ataque</button>
+                  <button class="admin-btn admin-btn-sm" id="btn-reset-flow">↺ Reset</button>
+                  <button class="admin-btn admin-btn-sm" id="btn-flow-preview-full">▶ Preview Fluxo</button>
+                  <button class="admin-btn admin-btn-sm" id="btn-reset-view" style="margin-left:auto;">↺ Reset View</button>
+                </div>
+                <div class="flow-canvas" id="flow-canvas">
+                  <div class="flow-world" id="flow-world">
+                    <svg id="flow-svg"></svg>
+                  </div>
+                </div>
+                <!-- Mini preview overlay -->
+                <div class="flow-mini-preview">
+                  <canvas id="flow-mini-canvas" width="200" height="200"></canvas>
+                </div>
+              </div>
+              <div class="admin-preview-actions">
+                <button class="admin-btn admin-btn-blue" id="btn-char-preview-isolated">Tela Cheia</button>
+                <button class="admin-btn admin-btn-blue" id="btn-char-test-battle">Testar Batalha</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ Tab: Cartas ═══ -->
+        <div class="admin-tab-content" id="tab-cards">
+          <div class="admin-3col">
+            <div class="admin-sidebar">
+              <div class="admin-sidebar-head">
+                <span class="admin-sidebar-title">Cartas</span>
+                <span class="admin-sidebar-count" id="card-count">0</span>
+              </div>
+              <button class="admin-btn-add" id="btn-new-card">+ Adicionar</button>
+              <div class="admin-list" id="card-list"></div>
+            </div>
+            <div class="admin-config">
+              <div class="admin-config-scroll">
+                <div class="admin-field">
+                  <label class="admin-label">Nome <span class="admin-req">*</span></label>
+                  <input type="text" id="admin-card-name" class="admin-input" placeholder="Ex: Gum-Gum Pistol">
+                </div>
+                <div class="admin-field">
+                  <label class="admin-label">ID</label>
+                  <input type="text" id="admin-card-id" class="admin-input" placeholder="Auto-gerado" readonly>
+                </div>
+                <div class="admin-field-row">
+                  <div class="admin-field">
+                    <label class="admin-label">Tipo</label>
+                    <select id="admin-card-type" class="admin-input">
+                      <option value="attack">Attack</option>
+                      <option value="skill">Skill</option>
+                      <option value="power">Power</option>
+                      <option value="combo">Combo</option>
+                      <option value="haki">Haki</option>
+                      <option value="devil-fruit">Devil Fruit</option>
+                      <option value="crew">Crew</option>
+                      <option value="support">Support</option>
+                    </select>
+                  </div>
+                  <div class="admin-field">
+                    <label class="admin-label">Custo</label>
+                    <input type="number" id="admin-card-cost" class="admin-input" value="1" min="0" max="10">
+                  </div>
+                  <div class="admin-field">
+                    <label class="admin-label">Ícone</label>
+                    <input type="text" id="admin-card-icon" class="admin-input" placeholder="👊">
+                  </div>
+                </div>
+                <div class="admin-field">
+                  <label class="admin-label">Descrição do Efeito</label>
+                  <textarea id="admin-card-effect" class="admin-input" rows="3" placeholder="Ex: Deal 8 damage."></textarea>
+                  <span class="admin-helper">Use inglês: Deal X damage, Gain X Block, Heal X, Draw X</span>
+                </div>
+
+                <div class="admin-divider"></div>
+                <h4 class="admin-section-label">Arte da Carta</h4>
+                <div class="admin-dropzone" id="card-art-drop">
+                  <p>Arraste a arte aqui</p>
+                  <button class="admin-btn anim-browse-btn">Selecionar</button>
+                  <input type="file" id="card-art-input" accept="image/*" hidden>
+                </div>
+                <div class="admin-thumb-single" id="card-art-thumb"></div>
+
+                <h4 class="admin-section-label">Frame da Carta</h4>
+                <div class="admin-dropzone" id="card-frame-drop">
+                  <p>Arraste o frame aqui</p>
+                  <button class="admin-btn anim-browse-btn">Selecionar</button>
+                  <input type="file" id="card-frame-input" accept="image/*" hidden>
+                </div>
+                <div class="admin-thumb-single" id="card-frame-thumb"></div>
+              </div>
+              <div class="admin-config-footer">
+                <button class="admin-btn admin-btn-cancel" id="btn-card-cancel">Cancelar</button>
+                <button class="admin-btn admin-btn-save" id="btn-card-save">Salvar</button>
+              </div>
+            </div>
+            <div class="admin-preview">
+              <div class="admin-preview-stage">
+                <div class="admin-preview-label">Preview da Carta</div>
+                <div class="admin-card-preview" id="card-preview-area">
+                  <div class="game-card type-attack" id="card-live-preview">
+                    <div class="card-cost">1</div>
+                    <div class="card-name">Card Name</div>
+                    <div class="card-icon">⚔️</div>
+                    <div class="card-desc">Effect description</div>
+                    <div class="card-type-label">attack</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ Tab: Cenários ═══ -->
+        <div class="admin-tab-content" id="tab-scenarios">
+          <div class="admin-3col">
+            <div class="admin-sidebar">
+              <div class="admin-sidebar-head">
+                <span class="admin-sidebar-title">Cenários</span>
+                <span class="admin-sidebar-count" id="scenario-count">0</span>
+              </div>
+              <button class="admin-btn-add" id="btn-new-scenario">+ Adicionar</button>
+              <div class="admin-list" id="scenario-list"></div>
+            </div>
+            <div class="admin-config">
+              <div class="admin-config-scroll">
+                <div class="admin-field">
+                  <label class="admin-label">Nome <span class="admin-req">*</span></label>
+                  <input type="text" id="scenario-name" class="admin-input" placeholder="Ex: Marineford">
+                </div>
+                <div class="admin-field">
+                  <label class="admin-label">ID</label>
+                  <input type="text" id="scenario-id" class="admin-input" placeholder="Auto-gerado" readonly>
+                </div>
+                <div class="admin-field-row">
+                  <div class="admin-field">
+                    <label class="admin-label">Tipo</label>
+                    <select id="scenario-type" class="admin-input">
+                      <option value="batalha">Batalha</option>
+                      <option value="boss">Boss</option>
+                      <option value="descanso">Descanso</option>
+                      <option value="evento">Evento</option>
+                    </select>
+                  </div>
+                  <div class="admin-field">
+                    <label class="admin-label">Floor</label>
+                    <select id="scenario-floor" class="admin-input">
+                      <option value="1">Floor 1</option>
+                      <option value="2">Floor 2</option>
+                      <option value="3">Floor 3</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="admin-divider"></div>
+                <h4 class="admin-section-label">Mídia</h4>
+                <div class="admin-dropzone" id="scenario-media-drop">
+                  <p>Arraste vídeo MP4 ou imagem aqui</p>
+                  <button class="admin-btn anim-browse-btn">Selecionar</button>
+                  <input type="file" id="scenario-media-input" accept="video/mp4,image/png,image/jpeg,image/webp" hidden>
+                </div>
+
+                <div class="admin-field">
+                  <label class="admin-label">Opacidade: <span id="scenario-opacity-val">85</span>%</label>
+                  <input type="range" id="scenario-opacity" class="admin-range" min="0" max="100" value="85">
+                </div>
+                <div class="admin-field">
+                  <label class="admin-label">Overlay Escuro: <span id="scenario-overlay-val">25</span>%</label>
+                  <input type="range" id="scenario-overlay" class="admin-range" min="0" max="100" value="25">
+                </div>
+              </div>
+              <div class="admin-config-footer">
+                <button class="admin-btn admin-btn-cancel" id="btn-scenario-cancel">Cancelar</button>
+                <button class="admin-btn admin-btn-save" id="btn-scenario-save">Salvar</button>
+              </div>
+            </div>
+            <div class="admin-preview">
+              <div class="admin-preview-stage">
+                <div class="admin-preview-label">Preview do Cenário</div>
+                <div class="admin-scenario-preview" id="scenario-preview">
+                  <div class="scenario-preview-empty">Nenhuma mídia carregada</div>
+                </div>
+              </div>
+              <div class="admin-preview-actions">
+                <button class="admin-btn admin-btn-blue" id="btn-scenario-test">Testar no Jogo</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flow Preview Modal -->
+    <div id="flow-preview-modal" class="flow-preview-modal hidden">
+      <div class="flow-preview-label" id="flow-preview-label">▶ Parado</div>
+      <div class="flow-preview-canvas-wrap">
+        <canvas id="flow-preview-canvas" width="600" height="400"></canvas>
+        <div class="flow-atk-chooser hidden" id="flow-atk-chooser">
+          <label style="font-size:0.65rem;color:var(--admin-text-dim);display:flex;align-items:center;gap:6px;">
+            <input type="checkbox" id="flow-atk-random"> Aleatório
+          </label>
+          <div id="flow-atk-list"></div>
+        </div>
+      </div>
+      <div class="flow-preview-controls">
+        <button class="admin-btn admin-btn-sm" id="btn-flow-prev-restart">↺ Reiniciar</button>
+        <button class="admin-btn admin-btn-sm" id="btn-flow-prev-pause">⏸ Pausar</button>
+        <button class="admin-btn admin-btn-sm" id="btn-flow-prev-close">&times; Fechar</button>
+      </div>
+    </div>
+
+    <!-- Admin Isolated Preview Modal -->
+    <div id="admin-preview-modal" class="modal">
+      <div class="admin-modal-content">
+        <button class="admin-close" id="btn-close-preview-modal">&times;</button>
+        <canvas id="isolated-preview-canvas" width="400" height="400"></canvas>
+        <div class="admin-preview-poses">
+          <button class="admin-btn admin-btn-sm" data-ipose="idle">Parado</button>
+          <button class="admin-btn admin-btn-sm" data-ipose="attack">Atacando</button>
+          <button class="admin-btn admin-btn-sm" data-ipose="hit">Dano</button>
+          <button class="admin-btn admin-btn-sm" data-ipose="death">Morte</button>
+          <button class="admin-btn admin-btn-sm" data-ipose="defense">Defesa</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tooltip -->
+    <div id="tooltip" class="tooltip hidden"></div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="cloud-config.js"></script>
+  <script src="game.js"></script>
+  <script src="admin.js"></script>
+  <button id="btn-open-admin-temp" onclick="showScreen('admin-screen')" style="position:fixed;bottom:20px;right:20px;z-index:999;background:rgba(200,169,110,0.2);border:1px solid #c8a96e;color:#c8a96e;font-family:Cinzel,serif;font-size:0.7rem;padding:8px 16px;border-radius:6px;cursor:pointer;letter-spacing:2px;">⚙️ ADMIN</button>
+</body>
+</html>
